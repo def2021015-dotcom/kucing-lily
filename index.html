@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kucing dan Bunga Lily</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #08050e; }
+  canvas { display: block; width: 100%; height: 100%; cursor: pointer; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+/* =====================================================================
+   PENGATURAN (boleh diubah)
+   ===================================================================== */
+const MULAI_GAMBAR = 7;    // detik ke berapa gambar bunga mulai muncul
+const LAMA_TAHAP   = 0.95; // lama tiap tahap kotak -> detail (detik)
+
+/* =====================================================================
+   DATA GAMBAR BUNGA LILY (jangan diubah)
+   ===================================================================== */
+const PAL  = ["#ffffff", "#c87d73", "#ebb6a6", "#de95a9", "#e19e90", "#6e824a", "#f5ddce", "#81985d", "#e5a6b7", "#e1b4a8", "#d68b7f", "#ba647a", "#ebbeaf", "#d47f95", "#f2d3c4", "#eec8b9", "#243313", "#5c2d23", "#b95c60", "#a6816e", "#eef1df", "#f0c9d2", "#21381a", "#5a6a3c", "#c7cbb6", "#4a6132", "#e9b4c1", "#816445", "#d6a798", "#37301c", "#c9978a", "#7a3e37", "#c47085", "#395124", "#224118", "#1e3c14", "#efbeca", "#f2d3d9", "#293916", "#e7ab9d", "#a8484b"];
+const ROWS = [
+  "000000000000000000000000000o0000000000000000000ku0000000000",
+  "0000000000000000000000000ssfee00000000000000001ac0000000000",
+  "000000000000000000000000ucef21a000000000000001f6c1000000000",
+  "000000000000000000000001cecssci00000000000001e6f21000000000",
+  "00000000000000a1k000001cecc10000000000000001f6e9D1000000000",
+  "0000000000000acfua1k012fffc10000000000000019eesD10000000000",
+  "0000000000001ceeef21kafeff240001111a00000o1ff924b0000000000",
+  "00000000000012eeeccc1Dff4cc10faDf6ee9u00054c9DD100000000000",
+  "00000000000004feejvcssu212cia4De66e9D4u0554jj4ai00000000000",
+  "00000000000001feeevhcuh2a221DDfe6si000f055u54ai000000000000",
+  "00000000000001ccvffruv9r1D4i4Df6Dik33w00575rurk000000000000",
+  "000000000000001cvvcr2hsha24i4DffEk0bqqb055z7xk0000000000000",
+  "000000000000001Drvur9rsv1Di1aDcis00iqllwgzxyk00000055000000",
+  "000nnnppnnuaa44aDhrsr4rai4E14DDt0008qBBlwzy000055557pn00000",
+  "pxxnp775p1Dfec22D4rsrur1iaEia41u000dAlBAqj0000nn575pn000000",
+  "0000mzynuf6efc2D4DDrurj1i1ED2c83dw0wAllqAd00wwd8umm00000000",
+  "00000mgufe66ec4a11aarjriivDDslBBBAddqAqqqwbdABlBlg000000000",
+  "000000s266666ef24iEEarrvv1DDcBBABq8bqqqqq3vlllllllwpp000000",
+  "0000001e411D9ffcD41EEE1r1D2ccABBqA8w8qhq8vjlllllBqbxpxpp000",
+  "0000001D1gzpr14222DDDvv1Dc2aa1qBl33w83vs9rAsvABBAwm5575ppn0",
+  "0000001100myzgiaa111i4cciEEEgCwBA83w8dh9rcqvvllAwgzyy5775xp",
+  "0000000000kzz14cD4a29fa1iiiizmwll8wb3drur9hAAAAwgyzyyyyyyyx",
+  "0000000k75555aef4Deeeaa1aaixzmb3A8wiwwjrsr99hA8bgzzyz000000",
+  "0000005n55nC126cf6e41aggg115zttb38wiwr1nrsjhqqbwddb00000000",
+  "00000nn7775z1e69eeDagg0mzz7gw3qA3wbEbnnrurs83w38AA8w0000000",
+  "0000n575zzzz1ffffD1gyzmkzzCulBBBlAAvixjrj33db38qllBAw000000",
+  "000pnnnyyyzy12cf21Cy55zmkgulBBl8838vhjvwdbibd38lBBBlAw00000",
+  "00pp0000000zC1D21gz77zyzmulBBBBBBB38hviEEibbdqlBBBBBAw00000",
+  "000000000000gh4D1g77zyyzj8ABBBBBBBBBE8vEd38qdbwbbbwllw00000",
+  "000000000000nnj4gpyyyzzzdAlqdwbbwdiibAlllbwqAAbgm00bAb00000",
+  "000000000000ppzj5xyyzzom3AdwgzzgwiidbblBlA38ll3mz000b000000",
+  "0000000000kppz777yzyzk0yudgzzzzzbiddbibblBBqqlAbzm000000000",
+  "0000000000ppz777xym0000nCjyyzyygidwbtt00blBlqAAb7zm00000000",
+  "0000000000px77nxxo00000p77yzzzzzibigm0000bqlA88bz7ym0000000",
+  "000000000pp7nxppk000000pp7zyzm0z7Czm000000bqq83bmzzy0000000",
+  "000000000px5pxo00000000kp7zzz00yzyz00000000b88b000mzm000000",
+  "000000000ppy000000000000xnyzz0mnzz000000000l3b000000m000000",
+  "000000000xy00000000000000xyz00nm00000000000ob00000000000000",
+  "000000000k0000000000000000m00000000000000000000000000000000",
+  "00000000000000000000000000000000000000000000000000000000000"
+];
+
+/* =====================================================================
+   KODE UTAMA (jangan diubah)
+   ===================================================================== */
+const cv = document.getElementById("c"), ctx = cv.getContext("2d");
+const COLS = 59, NR = 40, RASIO = 1.0625, LV = [16, 8, 4, 2, 1];
+const CHARS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const RGB = PAL.map(h => [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16)));
+const IDX = ROWS.map(r => [...r].map(c => CHARS.indexOf(c)));
+
+// warna rata-rata tiap blok untuk tiap tahap (besar -> kecil)
+const AVG = LV.map(b => {
+  const bw = Math.ceil(COLS / b), bh = Math.ceil(NR / b), a = [];
+  for (let by = 0; by < bh; by++) for (let bx = 0; bx < bw; bx++) {
+    let s = [0, 0, 0], n = 0;
+    for (let y = by * b; y < Math.min(NR, by * b + b); y++)
+      for (let x = bx * b; x < Math.min(COLS, bx * b + b); x++) {
+        const c = RGB[IDX[y][x]]; s[0] += c[0]; s[1] += c[1]; s[2] += c[2]; n++;
+      }
+    a.push("rgb(" + s.map(v => Math.round(v / n)).join(",") + ")");
+  }
+  return { b: b, bw: bw, a: a };
+});
+const ACAK = AVG.map(l => l.a.map(() => Math.random() * 0.7));
+
+const cl  = v => Math.max(0, Math.min(1, v));
+const eo  = v => 1 - Math.pow(1 - v, 3);
+const eob = v => 1 + 2.70158 * Math.pow(v - 1, 3) + 1.70158 * Math.pow(v - 1, 2);
+
+let t0 = performance.now();
+cv.onclick = () => { t0 = performance.now(); };
+
+// ---------- gambar kucing & bunga (satuan u) ----------
+function unit(x, y, u, alpha, fn) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(x, y); ctx.scale(u, u);
+  ctx.lineWidth = 0.28; ctx.lineCap = "round"; ctx.lineJoin = "round";
+  fn();
+  ctx.restore();
+}
+function oren() {
+  ctx.strokeStyle = "#f2a43a"; ctx.shadowColor = "#f2a43a"; ctx.shadowBlur = 10;
+  ctx.setLineDash([0.9, 0.22]);
+}
+function kepala(cx, cy) {
+  oren();
+  ctx.beginPath();
+  ctx.moveTo(cx - 3.5, cy - 1.2); ctx.lineTo(cx - 3.5, cy - 4.4); ctx.lineTo(cx - 1.3, cy - 2.6);
+  ctx.lineTo(cx + 1.3, cy - 2.6); ctx.lineTo(cx + 3.5, cy - 4.4); ctx.lineTo(cx + 3.5, cy - 1.2);
+  ctx.quadraticCurveTo(cx + 3.7, cy + 1.8, cx, cy + 1.8);
+  ctx.quadraticCurveTo(cx - 3.7, cy + 1.8, cx - 3.5, cy - 1.2);
+  ctx.stroke();
+  ctx.setLineDash([]); ctx.shadowBlur = 0;
+  ctx.fillStyle = "#4ade80";
+  [-1.5, 1.5].forEach(d => { ctx.beginPath(); ctx.arc(cx + d, cy - 0.6, 0.4, 0, 7); ctx.fill(); });
+  ctx.fillStyle = "#f472b6"; ctx.beginPath(); ctx.arc(cx, cy + 0.5, 0.3, 0, 7); ctx.fill();
+  ctx.strokeStyle = "rgba(242,164,58,.6)"; ctx.lineWidth = 0.12;
+  [-1, 1].forEach(d => { ctx.beginPath(); ctx.moveTo(cx + d * 2.3, cy + 0.6); ctx.lineTo(cx + d * 4.3, cy + 0.2);
+    ctx.moveTo(cx + d * 2.3, cy + 1); ctx.lineTo(cx + d * 4.2, cy + 1.3); ctx.stroke(); });
+}
+function kucingDepan(x, gy, u, a) {
+  unit(x, gy, u, a, () => {
+    oren();
+    ctx.beginPath();
+    ctx.moveTo(-3, -5); ctx.bezierCurveTo(-5.4, -4, -5.6, -1, -4.6, -0.2);
+    ctx.lineTo(4.6, -0.2); ctx.bezierCurveTo(5.6, -1, 5.4, -4, 3, -5);
+    [-3.2, -1.2, 1.2, 3.2].forEach(f => { ctx.moveTo(f + 0.7, -0.2); ctx.arc(f, -0.2, 0.7, 0, Math.PI, true); });
+    ctx.moveTo(-4.8, -0.6); ctx.bezierCurveTo(-8, 0.3, -9.2, -1.4, -8.4, -2.4);
+    [[-2.6, -3.2], [1.4, -3.2], [-2, -2.2], [0.8, -2.2]].forEach(p => { ctx.moveTo(p[0], p[1]); ctx.lineTo(p[0] + 1.2, p[1]); });
+    ctx.stroke();
+    kepala(0, -6.8);
+  });
+}
+function kucingSamping(x, gy, u, a, fase, jalan) {
+  unit(x, gy, u, a, () => {
+    oren();
+    ctx.beginPath();
+    ctx.roundRect(-5.5, -5.6, 9.7, 3.6, 1.5);
+    [-4.5, -3, 1.6, 3.2].forEach((lx, i) => {
+      const sw = jalan ? Math.sin(fase + i * Math.PI) * 0.8 : 0;
+      ctx.moveTo(lx, -2); ctx.lineTo(lx + sw, 0); ctx.lineTo(lx + sw + 0.7, 0);
+    });
+    ctx.moveTo(-5.4, -4.6); ctx.bezierCurveTo(-8, -5.6, -8.4, -8, -7, -8.8);
+    ctx.stroke();
+    kepala(5.4, -6.8);
+  });
+}
+function bunga(x, y, u, ang, a) {
+  unit(x, y, u, a, () => {
+    ctx.rotate(ang);
+    ctx.strokeStyle = "#4ade80"; ctx.shadowColor = "#4ade80"; ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.moveTo(-4, 0); ctx.lineTo(-0.9, 0);
+    ctx.moveTo(-3.2, -0.7); ctx.lineTo(-4, 0); ctx.lineTo(-3.2, 0.7); ctx.stroke();
+    ctx.strokeStyle = "#ff4d7e"; ctx.shadowColor = "#ff4d7e"; ctx.setLineDash([0.35, 0.25]);
+    ctx.fillStyle = "rgba(255,77,126,.3)";
+    ctx.beginPath(); ctx.arc(0, 0, 0.95, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.setLineDash([]); ctx.beginPath(); ctx.arc(0, 0, 0.45, 0, 1.5 * Math.PI); ctx.stroke();
+  });
+}
+
+// ---------- animasi utama ----------
+function frame(now) {
+  const dpr = window.devicePixelRatio || 1, W = innerWidth, H = innerHeight;
+  if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) {
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const t = (now - t0) / 1000;
+  const land = W > H;
+  const u = land ? Math.min(W / 62, H / 34) : W / 34;
+  const gy = H * (land ? 0.8 : 0.82), catX = W * 0.2;
+
+  // latar gelap
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, "#08050e"); g.addColorStop(1, "#1d0b25");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "rgba(255,255,255,.22)";
+  for (let x = u; x < W; x += u * 1.1) ctx.fillRect(x, gy + u * 0.5, 2, 2);
+
+  // posisi bunga mendarat & kartu
+  const land1 = { x: catX + 16 * u, y: gy - 1.2 * u };
+  const cardW = land ? Math.min(W * 0.52, H * 0.68 / 0.7427) : Math.min(W * 0.9, H * 0.5 / 0.7427);
+  const pad = cardW * 0.04, cw = (cardW - 2 * pad) / COLS, ch = cw * RASIO;
+  const cardH = NR * ch + 2 * pad;
+  const kx = land ? W * 0.64 : W / 2, ky = land ? H * 0.4 : H * 0.34;
+
+  // kucing berjalan masuk, lalu duduk
+  const x = -12 * u + (catX + 0 - -12 * u) * eo(cl(t / 3.2));
+  const duduk = cl((t - 4.2) / 0.6);
+  kucingSamping(x, gy, u, 1 - duduk, t * 10, t < 3.2);
+  kucingDepan(catX, gy, u, duduk);
+
+  // bunga: di mulut -> dilempar -> mendarat
+  const mulut = { x: x + 10.6 * u, y: gy - 5.8 * u };
+  if (t < 4) {
+    bunga(mulut.x, mulut.y, u, 0, 1);
+  } else {
+    const f = cl((t - 4) / 1.6);
+    const px = mulut.x + (land1.x - mulut.x) * f;
+    const py = mulut.y + (land1.y - mulut.y) * f - 9 * u * 4 * f * (1 - f);
+    bunga(px, py, u, -f * 4 * Math.PI, 1);
+  }
+
+  // hati kecil melayang
+  if (t > 4.8) {
+    ctx.save(); ctx.globalAlpha = cl((t - 4.8) / 0.6);
+    ctx.fillStyle = "#b388ff"; ctx.font = u * 1.3 + "px sans-serif";
+    ctx.fillText("\u2665", catX - 8 * u, gy - 13 * u + Math.sin(t * 2) * 0.4 * u);
+    ctx.restore();
+  }
+
+  // kartu putih muncul dari bunga
+  const cs = (t - 5.8) / 0.9;
+  if (cs > 0) {
+    const m = eo(cl(cs)), sc = Math.max(0.05, eob(cl(cs)));
+    const cx = land1.x + (kx - land1.x) * m, cy = land1.y + (ky - land1.y) * m;
+    ctx.save();
+    ctx.translate(cx, cy); ctx.scale(sc, sc);
+    ctx.shadowColor = "rgba(190,215,255,.9)"; ctx.shadowBlur = 40 * cl(cs);
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath(); ctx.roundRect(-cardW / 2, -cardH / 2, cardW, cardH, 6); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // gambar bunga: dari kotak besar -> kotak kecil -> detail penuh
+    const gx = -cardW / 2 + pad, gyy = -cardH / 2 + pad;
+    for (let y = 0; y < NR; y++) for (let xx = 0; xx < COLS; xx++) {
+      let warna = null;
+      for (let k = LV.length - 1; k >= 0; k--) {
+        const L = AVG[k], bi = Math.floor(y / L.b) * L.bw + Math.floor(xx / L.b);
+        if (t >= MULAI_GAMBAR + k * LAMA_TAHAP + ACAK[k][bi]) { warna = L.a[bi]; break; }
+      }
+      if (warna) { ctx.fillStyle = warna; ctx.fillRect(gx + xx * cw, gyy + y * ch, cw + 0.6, ch + 0.6); }
+    }
+
+    // garis kotak-kotak (grid) muncul di akhir
+    const ga = cl((t - (MULAI_GAMBAR + LV.length * LAMA_TAHAP + 0.8)) / 1.4);
+    if (ga > 0) {
+      for (let i = 0; i <= COLS; i++) {
+        ctx.strokeStyle = i % 10 === 0 ? "rgba(40,40,40," + 0.7 * ga + ")" : "rgba(90,90,90," + 0.3 * ga + ")";
+        ctx.lineWidth = i % 10 === 0 ? 1.6 : 0.8;
+        ctx.beginPath(); ctx.moveTo(gx + i * cw, gyy); ctx.lineTo(gx + i * cw, gyy + NR * ch); ctx.stroke();
+      }
+      for (let j = 0; j <= NR; j++) {
+        ctx.strokeStyle = j % 10 === 0 ? "rgba(40,40,40," + 0.7 * ga + ")" : "rgba(90,90,90," + 0.3 * ga + ")";
+        ctx.lineWidth = j % 10 === 0 ? 1.6 : 0.8;
+        ctx.beginPath(); ctx.moveTo(gx, gyy + j * ch); ctx.lineTo(gx + COLS * cw, gyy + j * ch); ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  if (t > 14) {
+    ctx.fillStyle = "rgba(255,255,255," + 0.4 * cl((t - 14) / 1) + ")";
+    ctx.font = "14px sans-serif"; ctx.textAlign = "center";
+    ctx.fillText("klik layar untuk mengulang", W / 2, H - 16);
+    ctx.textAlign = "left";
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
